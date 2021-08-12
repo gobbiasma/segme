@@ -13,7 +13,7 @@ from skimage import io
 # torch.utils.data.Dataset is an abstract class representing a dataset
 class QataCovDataset(Dataset): # inherit from torch.utils.data.Dataset
     "Lung sengmentation dataset."
-    def __init__(self,root_dir = os.path.join(os.getcwd(),"data/Lung Segmentation"),name_folder_image = "",split=None, transforms = None , shuffle = True):
+    def __init__(self,root_dir = os.path.join(os.getcwd(),"../input/my-dataset-seg"),name_folder_image = "",split=None, transforms = None , shuffle = True):
         """
         Args:
         :param root_dir (str):
@@ -26,10 +26,10 @@ class QataCovDataset(Dataset): # inherit from torch.utils.data.Dataset
         self.transforms = transforms
         
 
-        self.image_path = self.root_dir + '/'+self.folder_img_name+'/'
+        self.image_path = self.root_dir + '/Images/' + '/Images/'
 
         # target
-        #self.mask_path = os.path.join(self.root_dir,'Ground-truths')
+        self.mask_path = os.path.join(self.root_dir,'Ground-truths', 'Ground-truths')
         
 
     def __len__(self):
@@ -50,14 +50,14 @@ class QataCovDataset(Dataset): # inherit from torch.utils.data.Dataset
         #    file_idx = int(fName.split('_')[1])
         #    if idx == file_idx:
         #        mask_fName = fName
-        #mask_path = os.path.join(self.mask_path, 'mask_'+img_name)
+        mask_path = os.path.join(self.mask_path, 'mask_'+img_name)
 
         img_size = np.array(img).shape
 
-        #if os.path.exists(mask_path):
-        #    mask = Image.open(mask_path).convert('L')  # PIL Image
-        #else:
-        mask = Image.fromarray(np.zeros(img_size,dtype=np.uint8))
+        if os.path.exists(mask_path):
+            mask = Image.open(mask_path).convert('L')  # PIL Image
+        else:
+            mask = Image.fromarray(np.zeros(img_size,dtype=np.uint8))
 
         sample = {'image': img, 'mask': mask}
 
@@ -67,6 +67,7 @@ class QataCovDataset(Dataset): # inherit from torch.utils.data.Dataset
         if isinstance(img,torch.Tensor) and isinstance(mask, torch.Tensor):
             assert img.size == mask.size
         return sample
+
 
 if __name__ == "__main__":
     """Visualization"""
