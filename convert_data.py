@@ -16,7 +16,31 @@ from model.unet import UNet
 
 import gc
 
+def create_annotation(path):
 
+   
+    images_path = os.path.join(path,'Images')
+    masks_path = os.path.join(path,'Ground-truths')
+    
+    images = os.listdir(images_path)
+    masks = os.listdir(masks_path)
+
+    covid_images =[image for image in images if 'mask_'+image in masks]
+    no_covid_images =[image for image in images if 'mask_'+image not in masks]
+
+    covid = pd.DataFrame(columns=['img','target'])
+    no_covid = pd.DataFrame(columns=['img','target'])
+
+    covid['img'] = covid_images
+    covid['target'] = 1
+    no_covid['img'] = no_covid_images
+    no_covid['target'] = 0
+
+    annotation = pd.concat([covid,no_covid])
+
+    annotation = annotation.reset_index()
+
+    return annotation
 
 def create_original_data(path,out):
     
@@ -46,12 +70,12 @@ def create_original_data(path,out):
 
         croped = np.where(mask == 0, 0, img).astype(np.uint8)
 
-        Image.fromarray(croped).save(os.path.join(croped_out,'croped_'+img_file))
+        Image.fromarray(croped).save(os.path.join(croped_out,img_file))
 
     
-    for img_file in tqdm(no_covid_images):
-        copyfile(os.path.join(images_path,img_file),
-                os.path.join(images_out,img_file))
+   # for img_file in tqdm(no_covid_images):
+    #    copyfile(os.path.join(images_path,img_file),
+     #           os.path.join(images_out,img_file))
 
         #copyfile(os.path.join(masks_path,'mask_'+img_file),
         #        os.path.join(masks_out,'maks_'+img_file))
@@ -59,7 +83,7 @@ def create_original_data(path,out):
         #copyfile(os.path.join(images_path,img_file),
         #        os.path.join(croped_out,'croped_'+img_file))
 
-def create_predict_data(path,img_list,out,net,dataloader,device,img_size,name_image_folder):
+def create_predict_data(path,img_list,out,net,dataloader,device,img_size):
 
     masks_out = os.path.join(out,'predict_Ground-truths')
     croped_out = os.path.join(out,'predict_crop_images')
@@ -95,7 +119,7 @@ def create_predict_data(path,img_list,out,net,dataloader,device,img_size,name_im
 
     for i,img_name in tqdm(enumerate(img_list)):
 
-        img = Image.open(os.path.join(path,name_image_folder+'/'+img_name)).convert('L')
+        img = Image.open(os.path.join(path,'Images/'+img_name)).convert('L')
 
         mask = (predicted_masks_array[i,:,:]*255).astype(np.uint8)
 
@@ -105,7 +129,7 @@ def create_predict_data(path,img_list,out,net,dataloader,device,img_size,name_im
 
         croped = np.where(np.array(mask_img) == 0, 0, np.array(img)).astype(np.uint8)
 
-        Image.fromarray(croped).save(os.path.join(croped_out,'croped_'+img_name)) 
+        Image.fromarray(croped).save(os.path.join(croped_out,img_name)) 
 
 
 def get_args():
@@ -115,7 +139,6 @@ def get_args():
 
     # set your environment
     parser.add_argument('--path',type=str,default='./data/Qata_COV')
-    parser.add_argument('--name_image_folder', type=str, default='Images')
     parser.add_argument('--gpu', type=str, default = '0')
     # arguments for training
     parser.add_argument('--img_size', type = int , default = 224)
@@ -133,11 +156,11 @@ def main():
     if ~ os.path.exists(args.out):
         print("path created")
         os.mkdir(args.out)
-    #    os.mkdir(os.path.join(args.out,'Images'))
-    #    os.mkdir(os.path.join(args.out,'Ground-truths'))
-        os.mkdir(os.path.join(args.out,'predict_Ground-truths'))
-    #    os.mkdir(os.path.join(args.out,'original_crop_images'))
-        os.mkdir(os.path.join(args.out,'predict_crop_images'))
+        os.mkdir(os.path.join(args.out,'Images'))
+        os.mkdir(os.path.join(args.out,'Ground-truths'))
+        #os.mkdir(os.path.join(args.out,'predict_Ground-truths'))
+        os.mkdir(os.path.join(args.out,'original_crop_images'))
+        #os.mkdir(os.path.join(args.out,'predict_crop_images'))
     
     # set GPU device
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu # default: '0'
@@ -167,15 +190,15 @@ def main():
         ToTensor()
     ])
 
-    img_path = os.path.join(args.path,args.name_image_folder)
+    img_path = os.path.join(args.path,'Images')
     img_list = os.listdir(img_path)
 
-    dataset = QataCovDataset(root_dir = args.path,name_folder_image = args.name_image_folder,split=img_list,transforms=eval_transforms)
+    dataset = QataCovDataset(root_dir = args.path,split=img_list,transforms=eval_transforms)
     dataloader = DataLoader(dataset = dataset , batch_size=16)
     
-    #create_original_data(args.path,args.out)
+    create_original_data(args.path,args.out)
 
-    create_predict_data(args.path,img_list,args.out,model,dataloader,device,args.img_size,args.name_image_folder)
+   #create_predict_data(args.path,img_list,args.out,model,dataloader,device,args.img_size)
 
     #df = create_annotation(args.path)
 
