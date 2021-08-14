@@ -20,8 +20,8 @@ import gc
 
 def create_original_data(path,out):
     
-    images_path = os.path.join(path,'Images','Images')
-    masks_path = os.path.join(path,'Ground-truths','Ground-truths')
+    images_path = os.path.join(path,'Images')
+    masks_path = os.path.join(path,'Ground-truths')
 
     images_out = os.path.join(out,'Images')
     masks_out = os.path.join(out,'Ground-truths')
