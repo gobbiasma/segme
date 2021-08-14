@@ -16,31 +16,7 @@ from model.unet import UNet
 
 import gc
 
-def create_annotation(path):
 
-   
-    images_path = os.path.join(path,'Images','Images')
-    masks_path = os.path.join(path,'Ground-truths','Ground-truths')
-    
-    images = os.listdir(images_path)
-    masks = os.listdir(masks_path)
-
-    covid_images =[image for image in images if 'mask_'+image in masks]
-    no_covid_images =[image for image in images if 'mask_'+image not in masks]
-
-    covid = pd.DataFrame(columns=['img','target'])
-    no_covid = pd.DataFrame(columns=['img','target'])
-
-    covid['img'] = covid_images
-    covid['target'] = 1
-    no_covid['img'] = no_covid_images
-    no_covid['target'] = 0
-
-    annotation = pd.concat([covid,no_covid])
-
-    annotation = annotation.reset_index()
-
-    return annotation
 
 def create_original_data(path,out):
     
